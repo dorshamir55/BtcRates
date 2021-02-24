@@ -1,0 +1,5 @@
+#dotnet environment variables file
+.env
+
+#Dependency directories
+node/modules/
