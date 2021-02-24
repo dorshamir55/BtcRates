@@ -2,4 +2,4 @@
 .env
 
 #Dependency directories
-node/modules/
+node_modules/
