@@ -3,6 +3,7 @@ const axios = require('axios');
 const Airtable = require('airtable');
 require('dotenv').config();
 
+//Dotenv environment variables
 const BTC_BASE_URL = process.env.BTC_BASE_URL;
 const BTC_API_KEY = process.env.BTC_API_KEY;
 const AIR_TABLE_ID = process.env.AIR_TABLE_ID;
@@ -12,8 +13,10 @@ const BTC_TABLE = process.env.BTC_TABLE;
 var minutes = 1, the_interval = minutes * 60 * 1000;
 var btcArr = {};
 
+//Main method
 async function start ()
 {
+    //Checking if errors occured and trying to fix them
     if(Object.keys(btcArr).length>0) {
         postAllLostBTC();
     }
@@ -23,6 +26,7 @@ async function start ()
     postBtc(currentBtc);    
 } 
 
+//Retrieving current Bitcoin exchange rate
 async function getCurrentBtcDetails() {
     let url = BTC_BASE_URL+"?api_key="+BTC_API_KEY;
 
@@ -34,6 +38,7 @@ async function getCurrentBtcDetails() {
     return btc;
 }
 
+//Posting single btc
 async function postBtc(btc) {
     return new Promise((resolve, reject) => {
 
@@ -47,8 +52,9 @@ async function postBtc(btc) {
         }
         ], function(err, records) {
             if (err) {
-                console.error(err);
+                //Error occured - save the BTC variable for next
                 btcArr[btc.time]=btc;
+                console.error(err);
                 return reject(err);
             }
             records.forEach(function (record) {
@@ -59,28 +65,32 @@ async function postBtc(btc) {
     })
 }
 
+//Iterating all failed btc's for another try
 function postAllLostBTC() {
     for (var key in btcArr) {
         tryPost(btcArr[key]);
     }
 }
 
+//Trying to post the btc again
 var tryPost = function (btc) {
     return new Promise(
         async function (resolve, reject) {
             try { 
                 await postBtc(btc)
+
+                //Delete BTC by key if the postBtc method succeed
                 delete btcArr[btc.time];
-                resolve(btc); // fulfilled
+                resolve(btc);
             } catch {
                 var reason = new Error('Something wrong');
-                reject(reason); // reject
+                reject(reason);
             }
         }
     );
 };
 
-
+//Executing the program every single minute
 setInterval(function() {
     start();
 }, the_interval);
